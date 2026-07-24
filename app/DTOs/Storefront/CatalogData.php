@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Data;
-use App\DTOs\Storefront\ProductCollectionData;
+namespace App\DTOs\Storefront;
 
-final readonly class CatalogData
+class CatalogData
 {
     /**
-     * 
+     * @param FilterData[] $filters
+     * @param SortOptionData[] $sort
      */
     public function __construct(
         public ProductCollectionData $products,
@@ -14,5 +14,4 @@ final readonly class CatalogData
         public array $sort,
         public ?string $search,
     ) {}
-    
 }

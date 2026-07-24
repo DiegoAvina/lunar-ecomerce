@@ -1,38 +1,46 @@
-<div class="container mx-auto py-16">
+@extends('layouts.app')
 
-    <h1 class="text-4xl font-bold mb-10">
+@section('content')
 
-        Catálogo
+<div class="min-h-screen bg-gray-50">
 
-    </h1>
+    <!-- @include('catalog.partials.hero') -->
 
-    <div class="grid grid-cols-12 gap-10">
+    <div class="container mx-auto px-6 py-10">
 
-        <div class="col-span-3">
+        <div class="grid grid-cols-12 gap-8">
 
-            <x-catalog.sidebar
-                :filters="$catalog->filters"
-            />
+            {{-- Sidebar --}}
+            <aside class="col-span-3">
 
-        </div>
+                <x-catalog.sidebar
+                    :filters="$catalog->filters" />
 
-        <div class="col-span-9">
+            </aside>
 
-            <div
-                class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {{-- Contenido --}}
+            <section class="col-span-9">
 
-                @foreach($catalog->products as $product)
+                {{-- Buscador + Ordenamiento --}}
+                @include('catalog.partials.toolbar', [
+                'catalog' => $catalog,
+                ])
 
-                    <x-product-card
-                        :product="$product"
-                    />
+                {{-- Productos --}}
+                @include('catalog.partials.grid', [
+                'products' => $catalog->products,
+                ])
 
-                @endforeach
+                @include('catalog.partials.pagination', [
+                'paginator' => $catalog->products->paginator,
+                ])
 
-            </div>
+            </section>
 
         </div>
 
     </div>
 
 </div>
+
+@endsection

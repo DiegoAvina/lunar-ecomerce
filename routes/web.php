@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\SearchSuggestionController;
+
 use App\Http\Controllers\CheckoutController;
 
 
@@ -31,3 +33,7 @@ Route::get('/test-slide', function () {
         'asset' => asset($slide->image),
     ]);
 });
+Route::get(
+    '/api/search/suggestions',
+    SearchSuggestionController::class
+)->name('search.suggestions');
