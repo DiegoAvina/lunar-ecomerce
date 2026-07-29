@@ -20,11 +20,19 @@ final readonly class ProductData
 
         public ?ImageData $image,
 
-        /** @var ImageData[] */
+        /** @var ImageData[] */ 
         public array $gallery,
 
         /** @var BadgeData[] */
         public array $badges,
+
+        public ?string $description,
+
+        /** @var SpecificationData[] */
+        public array $specifications,
+
+        /** @var ProductData[] */
+        public array $relatedProducts,
 
         public string $url,
 

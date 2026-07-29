@@ -7,9 +7,11 @@ use App\Support\LunarAttribute;
 use App\Data\ProductData;
 use App\Data\BrandData;
 use Illuminate\Database\Eloquent\Builder;
-use Lunar\Models\Product;
 use App\Services\Storefront\Catalog\Queries\SearchQuery;
 use App\DTOs\Storefront\ProductCollectionData;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Lunar\Models\Product;
+
 
 
 
@@ -49,53 +51,81 @@ class ProductService
 
         return new ProductData(
 
-            id: $product->id,
+    id: $product->id,
 
-            name: LunarAttribute::text(
-                $product->attribute_data,
-                'name'
-            ),
+    name: LunarAttribute::text(
+        $product->attribute_data,
+        'name'
+    ),
 
-            slug: null,
+    slug: $product->id, // temporal, después usaremos el slug real
 
-            brand: new BrandData(
-                id: $product->brand?->id,
-                name: $product->brand?->name,
-            ),
+    brand: new BrandData(
+        id: $product->brand?->id,
+        name: $product->brand?->name,
+    ),
 
-            price: $this->prices->build($variant),
+    price: $this->prices->build($variant),
 
-            inventory: $this->inventory->build($variant),
+    inventory: $this->inventory->build($variant),
 
-            image: $this->images->primary($product),
+    image: $this->images->primary($product),
 
-            gallery: $this->images->gallery($product),
+    gallery: $this->images->gallery($product),
 
-            badges: $this->badges->build($product, $variant),
+    badges: $this->badges->build($product, $variant),
 
-            url: '#',
+    description: LunarAttribute::text(
+        $product->attribute_data,
+        'description'
+    ),
 
-            addToCartUrl: '#',
+    specifications: [
+        // Aquí irán las especificaciones reales
+    ],
 
-        );
+    relatedProducts: [
+        // Después cargaremos productos relacionados
+    ],
+
+    url: route('catalog.show', $product->id),
+
+    addToCartUrl: '#',
+);
+
+       
     }
 
     /**
      * @return ProductData[]
      */
-public function all(Builder $query): ProductCollectionData
+    public function all(Builder $query): ProductCollectionData
+    {
+        $paginator = $query
+            ->paginate(12)
+            ->withQueryString();
+
+        return new ProductCollectionData(
+            items: $paginator
+                ->getCollection()
+                ->map(fn(Product $product) => $this->map($product))
+                ->toArray(),
+
+            paginator: $paginator,
+        );
+    }
+    public function find(int $id): ProductData
 {
-    $paginator = $query
-        ->paginate(12)
-        ->withQueryString();
+    $product = Product::query()
+        ->with([
+            'brand',
+            'variants.prices',
+            'variants.stock',
+            'media',
+            'collections',
+        ])
+        ->findOrFail($id);
 
-    return new ProductCollectionData(
-        items: $paginator
-            ->getCollection()
-            ->map(fn (Product $product) => $this->map($product))
-            ->toArray(),
-
-        paginator: $paginator,
-    );
+    return $this->map($product);
 }
 }

@@ -1,3 +1,8 @@
+import Alpine from 'alpinejs';
+
+window.Alpine = Alpine;
+
+Alpine.start();
 
 import Swiper from 'swiper';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
@@ -10,5 +15,5 @@ window.Swiper = Swiper;
 window.SwiperModules = {
     Navigation,
     Pagination,
-    Autoplay
+    Autoplay,
 };

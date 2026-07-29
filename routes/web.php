@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\SearchSuggestionController;
+use App\Http\Controllers\ProductController;
 
 use App\Http\Controllers\CheckoutController;
 
@@ -37,3 +38,8 @@ Route::get(
     '/api/search/suggestions',
     SearchSuggestionController::class
 )->name('search.suggestions');
+
+Route::get(
+    '/productos/{product}',
+    ProductController::class
+)->name('catalog.show');

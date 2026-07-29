@@ -6,27 +6,41 @@ use Illuminate\Support\Collection;
 
 class LunarAttribute
 {
-    /**
-     * Obtiene un atributo traducido de Lunar.
-     */
     public static function text(
-    Collection|array $attributes,
-    string $field,
-    string $locale = 'es'
-): ?string {
+        Collection|array $attributes,
+        string $field,
+        string $locale = 'es'
+    ): ?string {
 
-    $attribute = $attributes[$field] ?? null;
+        $attribute = $attributes[$field] ?? null;
 
-    if (! $attribute) {
-        return null;
+        if (! $attribute) {
+            return null;
+        }
+
+        $translations = $attribute->getValue();
+
+        return $translations[$locale]?->getValue();
     }
 
-    $translations = $attribute->getValue();
+    public static function html(
+        Collection|array $attributes,
+        string $field,
+        string $locale = 'es'
+    ): ?string {
 
-    if (! isset($translations[$locale])) {
-        return null;
+        return self::text(
+            $attributes,
+            $field,
+            $locale
+        );
     }
 
-    return $translations[$locale]->getValue();
-}
+    public static function exists(
+        Collection|array $attributes,
+        string $field
+    ): bool {
+
+        return isset($attributes[$field]);
+    }
 }

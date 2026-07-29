@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html class="light" lang="es">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>@yield('title', 'Optidigital | Innovando tu Mundo')</title>
 
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
     <script id="tailwind-config">
         tailwind.config = {
@@ -87,14 +89,46 @@
                         "body-lg": ["Inter"]
                     },
                     "fontSize": {
-                        "headline-sm": ["24px", {"lineHeight": "1.4", "letterSpacing": "0", "fontWeight": "400"}],
-                        "headline-md": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "400"}],
-                        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "400"}],
-                        "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}],
-                        "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
-                        "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "300"}],
-                        "display-xl": ["72px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "300"}],
-                        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "300"}]
+                        "headline-sm": ["24px", {
+                            "lineHeight": "1.4",
+                            "letterSpacing": "0",
+                            "fontWeight": "400"
+                        }],
+                        "headline-md": ["32px", {
+                            "lineHeight": "1.3",
+                            "letterSpacing": "-0.01em",
+                            "fontWeight": "400"
+                        }],
+                        "label-sm": ["12px", {
+                            "lineHeight": "1",
+                            "letterSpacing": "0.02em",
+                            "fontWeight": "400"
+                        }],
+                        "label-md": ["14px", {
+                            "lineHeight": "1",
+                            "letterSpacing": "0.05em",
+                            "fontWeight": "500"
+                        }],
+                        "body-md": ["16px", {
+                            "lineHeight": "1.6",
+                            "letterSpacing": "0",
+                            "fontWeight": "400"
+                        }],
+                        "display-lg": ["48px", {
+                            "lineHeight": "1.2",
+                            "letterSpacing": "-0.02em",
+                            "fontWeight": "300"
+                        }],
+                        "display-xl": ["72px", {
+                            "lineHeight": "1.1",
+                            "letterSpacing": "-0.04em",
+                            "fontWeight": "300"
+                        }],
+                        "body-lg": ["18px", {
+                            "lineHeight": "1.6",
+                            "letterSpacing": "0",
+                            "fontWeight": "300"
+                        }]
                     }
                 },
             },
@@ -105,10 +139,12 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
         }
+
         body {
             background-color: #fcf9f8;
             color: #1c1b1b;
         }
+
         .carousel-item {
             opacity: 0;
             transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -116,15 +152,21 @@
             inset: 0;
             pointer-events: none;
         }
+
         .carousel-item.active {
             opacity: 1;
             position: relative;
             pointer-events: auto;
         }
     </style>
+    @vite([
+    'resources/css/app.css',
+    'resources/js/app.js',
+    ])
 
     @stack('styles')
 </head>
+
 <body class="font-body-md antialiased overflow-x-hidden">
 
     {{-- Navbar --}}
@@ -142,4 +184,5 @@
     @stack('scripts')
 
 </body>
+
 </html>
