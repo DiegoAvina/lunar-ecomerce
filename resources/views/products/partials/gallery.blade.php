@@ -45,7 +45,7 @@
 
     {{-- Imagen principal --}}
     <div
-        class="group relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-lg"
+        class="group relative overflow-hidden rounded-[2rem] border border-outline-variant/30 bg-gradient-to-b from-surface-container-low to-white shadow-sm"
     >
 
         {{-- Badges --}}
@@ -55,7 +55,23 @@
 
                 @foreach($product->badges as $badge)
 
-                    <span class="rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow">
+                    @php
+                        $classes = match($badge->type) {
+
+                            'danger' => 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200',
+
+                            'warning' => 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200',
+
+                            'success' => 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200',
+
+                            'info' => 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200',
+
+                            default => 'bg-white text-on-surface ring-1 ring-inset ring-outline-variant',
+
+                        };
+                    @endphp
+
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide shadow-sm {{ $classes }}">
 
                         {{ $badge->label }}
 
@@ -87,7 +103,7 @@
 
                 :alt="current.alt"
 
-                class="h-full w-full object-contain p-6 transition duration-300 ease-out"
+                class="h-full w-full object-contain p-10 transition duration-300 ease-out"
 
                 :style="zoom
                     ? `transform:scale(2);
@@ -121,8 +137,8 @@
                 class="overflow-hidden rounded-2xl border bg-white transition"
 
                 :class="index===i
-                    ? 'ring-2 ring-blue-600 border-blue-600 shadow-lg scale-105'
-                    : 'border-gray-200 hover:border-blue-300 hover:shadow'"
+                    ? 'ring-2 ring-primary border-primary shadow-lg scale-105'
+                    : 'border-outline-variant/50 hover:border-primary/40 hover:shadow'"
 
             >
 
@@ -162,11 +178,13 @@
 
             @click="lightbox=false"
 
-            class="absolute right-6 top-6 rounded-full bg-white p-3 shadow"
+            aria-label="Cerrar"
+
+            class="absolute right-6 top-6 flex h-11 w-11 items-center justify-center rounded-full bg-white text-on-surface shadow-lg transition hover:scale-105"
 
         >
 
-            ✕
+            <span class="material-symbols-outlined">close</span>
 
         </button>
 
@@ -176,11 +194,13 @@
 
             @click="prev()"
 
-            class="absolute left-6 rounded-full bg-white p-4 shadow"
+            aria-label="Imagen anterior"
+
+            class="absolute left-6 flex h-12 w-12 items-center justify-center rounded-full bg-white text-on-surface shadow-lg transition hover:scale-105"
 
         >
 
-            ‹
+            <span class="material-symbols-outlined">chevron_left</span>
 
         </button>
 
@@ -202,11 +222,13 @@
 
             @click="next()"
 
-            class="absolute right-6 rounded-full bg-white p-4 shadow"
+            aria-label="Imagen siguiente"
+
+            class="absolute right-6 flex h-12 w-12 items-center justify-center rounded-full bg-white text-on-surface shadow-lg transition hover:scale-105"
 
         >
 
-            ›
+            <span class="material-symbols-outlined">chevron_right</span>
 
         </button>
 

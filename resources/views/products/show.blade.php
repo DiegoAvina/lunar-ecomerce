@@ -3,22 +3,29 @@
 @section('title', $product->name)
 @section('content')
 
-<div class="bg-gray-50 min-h-screen">
+<div class="bg-surface-container-low min-h-screen">
 
-    <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="max-w-screen-2xl mx-auto px-8 py-10">
 
         {{-- Breadcrumb --}}
-        <nav class="mb-8 text-sm text-gray-500">
-            Inicio /
-            {{ $product->brand->name }}
-            /
-            {{ $product->name }}
+        <nav class="mb-8 flex items-center gap-2 text-sm text-secondary">
+
+            <a href="{{ route('home') }}" class="hover:text-primary transition-colors">Inicio</a>
+
+            <span class="material-symbols-outlined text-base" aria-hidden="true">chevron_right</span>
+ 
+            <a href="{{ route('catalog.index', ['brand' => [$product->brand->id]]) }}" class="hover:text-primary transition-colors">{{ $product->brand->name }}</a>
+
+            <span class="material-symbols-outlined text-base" aria-hidden="true">chevron_right</span>
+
+            <span class="truncate text-on-surface">{{ $product->name }}</span>
+
         </nav>
 
         {{-- Hero --}}
-        <div class="bg-white rounded-2xl shadow-sm p-8">
+        <div class="rounded-[2rem] border border-outline-variant/30 bg-white p-8 shadow-sm">
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+            <div class="grid grid-cols-1 gap-16 lg:grid-cols-2">
 
                 @include('products.partials.gallery')
 
@@ -34,17 +41,25 @@
 
         </div>
 
+        @if(count($product->specifications))
+
         <div class="mt-14">
 
             @include('products.partials.specifications')
 
         </div>
 
+        @endif
+
+        @if(count($product->relatedProducts))
+
         <div class="mt-16">
 
             @include('products.partials.related-products')
 
         </div>
+
+        @endif
 
     </div>
 

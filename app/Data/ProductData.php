@@ -18,9 +18,11 @@ final readonly class ProductData
 
         public InventoryData $inventory,
 
+        public ?int $variantId,
+
         public ?ImageData $image,
 
-        /** @var ImageData[] */ 
+        /** @var ImageData[] */
         public array $gallery,
 
         /** @var BadgeData[] */

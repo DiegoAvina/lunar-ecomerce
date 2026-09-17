@@ -1,10 +1,10 @@
 @if(count($catalog->products->items))
 
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid grid-cols-1 gap-gutter sm:grid-cols-2 lg:grid-cols-3">
 
         @foreach($catalog->products->items as $product)
 
-            <x-catalog.product-card
+            <x-product-card
                 :product="$product"
             />
 

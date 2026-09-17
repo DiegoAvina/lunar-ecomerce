@@ -7,24 +7,15 @@ use App\Support\LunarAttribute;
 use App\Data\ProductData;
 use App\Data\BrandData;
 use Illuminate\Database\Eloquent\Builder;
-use App\Services\Storefront\Catalog\Queries\SearchQuery;
 use App\DTOs\Storefront\ProductCollectionData;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Lunar\Models\Product;
-
-
-
 
 class ProductService
 {
     public function __construct(
-
         protected ProductImageService $images,
-
         protected ProductPriceService $prices,
-
         protected ProductInventoryService $inventory,
-
         protected ProductBadgeService $badges,
     ) {}
 
@@ -41,59 +32,64 @@ class ProductService
         }
 
         return $collection->products
-            ->map(fn($product) => $this->map($product))
+            ->map(fn ($product) => $this->map($product))
             ->toArray();
     }
 
-    public function map($product): ProductData
+    public function map($product, array $relatedProducts = []): ProductData
     {
         $variant = $product->variants->first();
 
         return new ProductData(
 
-    id: $product->id,
+            id: $product->id,
 
-    name: LunarAttribute::text(
-        $product->attribute_data,
-        'name'
-    ),
+            name: LunarAttribute::text(
+                $product->attribute_data,
+                'name'
+            ),
 
-    slug: $product->id, // temporal, después usaremos el slug real
+            slug: $product->id,
 
-    brand: new BrandData(
-        id: $product->brand?->id,
-        name: $product->brand?->name,
-    ),
+            brand: new BrandData(
+                id: $product->brand?->id,
+                name: $product->brand?->name,
+            ),
 
-    price: $this->prices->build($variant),
+            price: $this->prices->build($variant),
 
-    inventory: $this->inventory->build($variant),
+            inventory: $this->inventory->build($variant),
 
-    image: $this->images->primary($product),
+            // NUEVO
+            variantId: $variant?->id,
 
-    gallery: $this->images->gallery($product),
+            image: $this->images->primary($product),
 
-    badges: $this->badges->build($product, $variant),
+            gallery: $this->images->gallery($product),
 
-    description: LunarAttribute::text(
-        $product->attribute_data,
-        'description'
-    ),
+            badges: $this->badges->build(
+                $product,
+                $variant
+            ),
 
-    specifications: [
-        // Aquí irán las especificaciones reales
-    ],
+            description: LunarAttribute::text(
+                $product->attribute_data,
+                'description'
+            ),
 
-    relatedProducts: [
-        // Después cargaremos productos relacionados
-    ],
+            specifications: [],
 
-    url: route('catalog.show', $product->id),
+            relatedProducts: $relatedProducts,
 
-    addToCartUrl: '#',
-);
+            url: route(
+                'catalog.show',
+                $product->id
+            ),
 
-       
+            // Lo dejamos como estaba
+            addToCartUrl: url('/carrito/items'),
+
+        );
     }
 
     /**
@@ -108,24 +104,79 @@ class ProductService
         return new ProductCollectionData(
             items: $paginator
                 ->getCollection()
-                ->map(fn(Product $product) => $this->map($product))
+                ->map(fn (Product $product) => $this->map($product))
                 ->toArray(),
 
             paginator: $paginator,
         );
     }
-    public function find(int $id): ProductData
-{
-    $product = Product::query()
-        ->with([
-            'brand',
-            'variants.prices',
-            'variants.stock',
-            'media',
-            'collections',
-        ])
-        ->findOrFail($id);
 
-    return $this->map($product);
-}
+    public function find(int $id): ProductData
+    {
+        $product = Product::query()
+            ->with([
+                'brand',
+                'variants.prices',
+                'media',
+                'collections',
+            ])
+            ->findOrFail($id);
+
+        return $this->map(
+            $product,
+            $this->related($product)
+        );
+    }
+
+    /**
+     * Productos relacionados con el actual.
+     *
+     * Prioriza productos de la misma marca (la señal más fuerte
+     * de relación) y completa el resto con productos de las
+     * mismas colecciones si hacen falta más resultados.
+     *
+     * @return ProductData[]
+     */
+    public function related(Product $product, int $limit = 4): array
+    {
+        $base = fn () => Product::query()
+            ->with([
+                'brand',
+                'variants.prices',
+                'media',
+            ])
+            ->where('status', 'published')
+            ->where('id', '!=', $product->id);
+
+        $byBrand = $product->brand_id
+            ? $base()->where('brand_id', $product->brand_id)
+                ->inRandomOrder()
+                ->limit($limit)
+                ->get()
+            : collect();
+
+        $related = $byBrand;
+
+        $collectionIds = $product->collections->pluck('id');
+
+        if ($related->count() < $limit && $collectionIds->isNotEmpty()) {
+
+            $excludedIds = $related->pluck('id')->push($product->id);
+
+            $byCollection = $base()
+                ->whereNotIn('id', $excludedIds)
+                ->whereHas('collections', function (Builder $q) use ($collectionIds) {
+                    $q->whereIn('lunar_collections.id', $collectionIds);
+                })
+                ->inRandomOrder()
+                ->limit($limit - $related->count())
+                ->get();
+
+            $related = $related->concat($byCollection);
+        }
+
+        return $related
+            ->map(fn (Product $related) => $this->map($related))
+            ->toArray();
+    }
 }

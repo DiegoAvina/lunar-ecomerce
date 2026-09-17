@@ -11,8 +11,18 @@ class ProductController extends Controller
         ProductService $products,
         Product $product,
     ) {
+        $product->load([
+            'brand',
+            'variants.prices',
+            'media',
+            'collections',
+        ]);
+
         return view('products.show', [
-            'product' => $products->map($product),
+            'product' => $products->map(
+                $product,
+                $products->related($product)
+            ),
         ]);
     }
 }

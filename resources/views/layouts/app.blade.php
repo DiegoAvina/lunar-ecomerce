@@ -2,21 +2,63 @@
 <html class="light" lang="es">
 
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>@yield('title', 'Optidigital | Innovando tu Mundo')</title>
+
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    {{-- CSRF --}}
+    <meta
+        name="csrf-token"
+        content="{{ csrf_token() }}"
+    >
+
+    <title>
+        @yield('title', 'Optidigital | Innovando tu Mundo')
+    </title>
 
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    {{-- Fonts --}}
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+
+    <link
+        href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet"
+    >
+
+
+    {{-- Tailwind CDN --}}
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries,typography"></script>
+
+
+    {{-- Tailwind configuration --}}
 
     <script id="tailwind-config">
+
         tailwind.config = {
+
             darkMode: "class",
+
             theme: {
+
                 extend: {
-                    "colors": {
+
+                    colors: {
+
                         "on-secondary-fixed": "#1a1c1c",
                         "secondary-fixed-dim": "#c6c6c6",
                         "surface-container-lowest": "#ffffff",
@@ -64,21 +106,30 @@
                         "background": "#fcf9f8",
                         "on-tertiary": "#ffffff",
                         "surface-container-high": "#eae7e7"
+
                     },
-                    "borderRadius": {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
+
+                    borderRadius: {
+
+                        DEFAULT: "0.125rem",
+                        lg: "0.25rem",
+                        xl: "0.5rem",
+                        full: "0.75rem"
+
                     },
-                    "spacing": {
-                        "unit": "4px",
+
+                    spacing: {
+
+                        unit: "4px",
                         "margin-x": "64px",
                         "container-max": "1440px",
                         "section-gap": "128px",
-                        "gutter": "32px"
+                        gutter: "32px"
+
                     },
-                    "fontFamily": {
+
+                    fontFamily: {
+
                         "headline-sm": ["Inter"],
                         "headline-md": ["Inter"],
                         "label-sm": ["Inter"],
@@ -87,57 +138,104 @@
                         "display-lg": ["Inter"],
                         "display-xl": ["Inter"],
                         "body-lg": ["Inter"]
+
                     },
-                    "fontSize": {
-                        "headline-sm": ["24px", {
-                            "lineHeight": "1.4",
-                            "letterSpacing": "0",
-                            "fontWeight": "400"
-                        }],
-                        "headline-md": ["32px", {
-                            "lineHeight": "1.3",
-                            "letterSpacing": "-0.01em",
-                            "fontWeight": "400"
-                        }],
-                        "label-sm": ["12px", {
-                            "lineHeight": "1",
-                            "letterSpacing": "0.02em",
-                            "fontWeight": "400"
-                        }],
-                        "label-md": ["14px", {
-                            "lineHeight": "1",
-                            "letterSpacing": "0.05em",
-                            "fontWeight": "500"
-                        }],
-                        "body-md": ["16px", {
-                            "lineHeight": "1.6",
-                            "letterSpacing": "0",
-                            "fontWeight": "400"
-                        }],
-                        "display-lg": ["48px", {
-                            "lineHeight": "1.2",
-                            "letterSpacing": "-0.02em",
-                            "fontWeight": "300"
-                        }],
-                        "display-xl": ["72px", {
-                            "lineHeight": "1.1",
-                            "letterSpacing": "-0.04em",
-                            "fontWeight": "300"
-                        }],
-                        "body-lg": ["18px", {
-                            "lineHeight": "1.6",
-                            "letterSpacing": "0",
-                            "fontWeight": "300"
-                        }]
+
+                    fontSize: {
+
+                        "headline-sm": [
+                            "24px",
+                            {
+                                lineHeight: "1.4",
+                                letterSpacing: "0",
+                                fontWeight: "400"
+                            }
+                        ],
+
+                        "headline-md": [
+                            "32px",
+                            {
+                                lineHeight: "1.3",
+                                letterSpacing: "-0.01em",
+                                fontWeight: "400"
+                            }
+                        ],
+
+                        "label-sm": [
+                            "12px",
+                            {
+                                lineHeight: "1",
+                                letterSpacing: "0.02em",
+                                fontWeight: "400"
+                            }
+                        ],
+
+                        "label-md": [
+                            "14px",
+                            {
+                                lineHeight: "1",
+                                letterSpacing: "0.05em",
+                                fontWeight: "500"
+                            }
+                        ],
+
+                        "body-md": [
+                            "16px",
+                            {
+                                lineHeight: "1.6",
+                                letterSpacing: "0",
+                                fontWeight: "400"
+                            }
+                        ],
+
+                        "display-lg": [
+                            "48px",
+                            {
+                                lineHeight: "1.2",
+                                letterSpacing: "-0.02em",
+                                fontWeight: "300"
+                            }
+                        ],
+
+                        "display-xl": [
+                            "72px",
+                            {
+                                lineHeight: "1.1",
+                                letterSpacing: "-0.04em",
+                                fontWeight: "300"
+                            }
+                        ],
+
+                        "body-lg": [
+                            "18px",
+                            {
+                                lineHeight: "1.6",
+                                letterSpacing: "0",
+                                fontWeight: "300"
+                            }
+                        ]
+
                     }
-                },
-            },
+
+                }
+
+            }
+
         }
+
     </script>
 
+
+    {{-- Custom styles --}}
+
     <style>
+
         .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 300,
+                'GRAD' 0,
+                'opsz' 24;
         }
 
         body {
@@ -147,7 +245,8 @@
 
         .carousel-item {
             opacity: 0;
-            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transition:
+                opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             position: absolute;
             inset: 0;
             pointer-events: none;
@@ -158,30 +257,57 @@
             position: relative;
             pointer-events: auto;
         }
+
     </style>
+
+
+    {{-- Vite --}}
+
     @vite([
-    'resources/css/app.css',
-    'resources/js/app.js',
+        'resources/css/app.css',
+        'resources/js/app.js'
     ])
 
+
     @stack('styles')
+
 </head>
+
 
 <body class="font-body-md antialiased overflow-x-hidden">
 
-    {{-- Navbar --}}
+
+    {{-- ========================================================= --}}
+    {{-- NAVBAR OPTIDIGITAL --}}
+    {{-- ========================================================= --}}
+
     @include('partials.navbar')
 
-    {{-- Contenido principal --}}
+
+    {{-- ========================================================= --}}
+    {{-- CONTENIDO --}}
+    {{-- ========================================================= --}}
+
     <main>
+
         @yield('content')
+
     </main>
 
-    {{-- Footer --}}
+
+    {{-- ========================================================= --}}
+    {{-- FOOTER --}}
+    {{-- ========================================================= --}}
+
     @include('partials.footer')
 
-    {{-- Scripts del carousel (solo si la página los necesita) --}}
+
+    {{-- ========================================================= --}}
+    {{-- SCRIPTS --}}
+    {{-- ========================================================= --}}
+
     @stack('scripts')
+
 
 </body>
 
