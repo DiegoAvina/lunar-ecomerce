@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mercado Pago (Checkout Pro)
+    |--------------------------------------------------------------------------
+    |
+    | access_token y webhook_secret son secretos de servidor — nunca deben
+    | exponerse al frontend. public_key sí es seguro de exponer (se usaría
+    | solo si en el futuro se agrega un checkout embebido/Bricks).
+    |
+    */
+    'mercadopago' => [
+        'access_token' => env('MERCADOPAGO_ACCESS_TOKEN'),
+        'public_key' => env('MERCADOPAGO_PUBLIC_KEY'),
+        'webhook_secret' => env('MERCADOPAGO_WEBHOOK_SECRET'),
+    ],
+
 ];

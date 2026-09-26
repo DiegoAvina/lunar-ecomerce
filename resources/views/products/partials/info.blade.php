@@ -1,40 +1,50 @@
 @php
 $variantId = $product->variantId;
 
-$stock = (int) ($product->inventory->stock ?? 0);
+$inventory = $product->inventory;
 
-$backorder = (bool) ($product->inventory->backorder ?? false);
+$stock = (int) ($inventory->stock ?? 0);
+
+$minQuantity = max(1, (int) ($inventory->minQuantity ?? 1));
+
+$quantityIncrement = max(1, (int) ($inventory->quantityIncrement ?? 1));
+
+$maxQuantity = (int) ($inventory->maxQuantity ?? 0);
 
 /*
 |--------------------------------------------------------------------------
 | Disponibilidad real
 |--------------------------------------------------------------------------
 |
-| La existencia de Lunar es la fuente de verdad.
+| $inventory->available ya viene calculado con la API real de Lunar
+| (ProductVariant::canBeFulfilledAtQuantity), y contempla las tres
+| reglas de "purchasable" ('always', 'in_stock', 'in_stock_or_on_backorder').
 |
 | stock > 0
 | → Disponible
 |
-| stock = 0 + backorder
+| stock = 0 pero available (always / in_stock_or_on_backorder)
 | → Disponible bajo pedido
 |
-| stock = 0 + sin backorder
+| no available
 | → Agotado
 |
 */
 
-$available = $stock > 0;
+$available = (bool) $inventory->available;
 
-$canPurchase = $variantId && (
-$stock > 0 || $backorder
-);
+$canPurchase = $variantId && $available;
+
+$initialQty = $minQuantity + (($minQuantity % $quantityIncrement === 0)
+    ? 0
+    : $quantityIncrement - ($minQuantity % $quantityIncrement));
 @endphp
 
 
 
 <div
     x-data='{
-    qty: 1,
+    qty: {{ $initialQty }},
 
     loading: false,
 
@@ -42,11 +52,13 @@ $stock > 0 || $backorder
 
     error: null,
 
-    maxStock: {{ $stock }},
+    maxStock: {{ $maxQuantity }},
+
+    minQuantity: {{ $minQuantity }},
+
+    quantityIncrement: {{ $quantityIncrement }},
 
     variantId: {{ $variantId ?? "null" }},
-
-    backorder: {{ $backorder ? "true" : "false" }},
 
 
     /*
@@ -423,29 +435,24 @@ if (!data.success) {
     |--------------------------------------------------------------------------
     | Aumentar cantidad
     |--------------------------------------------------------------------------
+    |
+    | Avanza según quantity_increment del variant, no
+    | necesariamente de 1 en 1. La validación real siempre
+    | ocurre también en el servidor.
     */
-increase() {
+    increase() {
 
-    if (this.loading) {
-        return;
-    }
+        if (this.loading) {
+            return;
+        }
 
-    if (this.backorder) {
-        this.qty++;
-        return;
-    }
-
-    if (this.maxStock <= 0) {
-        return;
-    }
-
-    if (this.qty >= this.maxStock) {
-        this.qty = this.maxStock;
-        return;
-    }
-
-    this.qty++;
-},
+        this.qty = window.quantityRules.next(
+            this.qty,
+            this.minQuantity,
+            this.quantityIncrement,
+            this.maxStock
+        );
+    },
 
 
     /*
@@ -460,13 +467,11 @@ increase() {
             return;
         }
 
-
-        if (this.qty > 1) {
-
-            this.qty--;
-
-        }
-
+        this.qty = window.quantityRules.prev(
+            this.qty,
+            this.minQuantity,
+            this.quantityIncrement
+        );
     },
 
 
@@ -474,74 +479,60 @@ increase() {
     |--------------------------------------------------------------------------
     | Validar cantidad
     |--------------------------------------------------------------------------
+    |
+    | Corrige en el frontend cualquier cantidad que no respete
+    | min_quantity / quantity_increment / stock disponible. El
+    | backend (CartService + validadores de Lunar) siempre vuelve
+    | a validar esto de forma independiente.
     */
 
     validateQuantity() {
 
-        /*
-        | Nunca permitir cantidades menores
-        | a una unidad.
-        */
+        if (this.maxStock <= 0) {
 
-        if (
-            !this.qty ||
-            this.qty < 1
-        ) {
-
-            this.qty = 1;
-
-        }
-
-
-        /*
-        | Bajo pedido
-        |
-        | Puede solicitarse una cantidad mayor
-        | al stock disponible.
-        */
-
-        if (this.backorder) {
-
-            this.error = null;
-
-            return;
-
-        }
-
-
-        /*
-        | Producto normal
-        |
-        | No podemos vender más unidades
-        | de las existentes.
-        */
-
-        if (
-            this.maxStock <= 0
-        ) {
-
-            this.qty = 1;
+            this.qty = window.quantityRules.floor(
+                this.minQuantity,
+                this.quantityIncrement
+            );
 
             this.error =
                 "Este producto está agotado.";
 
             return;
-
         }
 
 
-        if (
-            this.qty > this.maxStock
-        ) {
+        const normalized = window.quantityRules.normalize(
+            this.qty || 0,
+            this.minQuantity,
+            this.quantityIncrement
+        );
 
-            this.qty =
-                this.maxStock;
+
+        if (normalized > this.maxStock) {
+
+            this.qty = window.quantityRules.clampToMax(
+                this.minQuantity,
+                this.quantityIncrement,
+                this.maxStock
+            );
 
             this.error =
                 `Solo hay ${this.maxStock} piezas disponibles.`;
 
             return;
+        }
 
+
+        if (normalized !== this.qty) {
+
+            this.qty = normalized;
+
+            this.error = this.quantityIncrement > 1
+                ? `La cantidad debe ser en incrementos de ${this.quantityIncrement}.`
+                : null;
+
+            return;
         }
 
 
@@ -628,7 +619,7 @@ increase() {
 
     <div class="mt-8">
 
-        @if($available)
+        @if($available && $stock > 0)
 
         <div class="flex items-center gap-3">
 
@@ -654,7 +645,7 @@ increase() {
 
         </p>
 
-        @elseif($backorder)
+        @elseif($available)
 
         <div class="flex items-center gap-3">
 
@@ -720,7 +711,7 @@ increase() {
             <button
                 type="button"
                 @click="decrease()"
-                :disabled="loading || qty <= 1"
+                :disabled="loading || qty <= quantityRules.floor(minQuantity, quantityIncrement)"
                 class="flex h-12 w-12 items-center justify-center text-xl font-semibold text-on-surface transition hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Disminuir cantidad">
                 −
@@ -732,7 +723,8 @@ increase() {
                 @input="validateQuantity()"
                 @change="validateQuantity()"
                 type="number"
-                min="1"
+                min="{{ $minQuantity }}"
+                step="{{ $quantityIncrement }}"
                 :disabled="
         loading ||
         {{ $canPurchase ? 'false' : 'true' }}
@@ -744,14 +736,7 @@ increase() {
             <button
                 type="button"
                 @click="increase()"
-                :disabled="
-                    loading ||
-                    (
-                        !backorder &&
-                        maxStock > 0 &&
-                        qty >= maxStock
-                    )
-                "
+                :disabled="loading || qty >= maxStock"
                 class="flex h-12 w-12 items-center justify-center text-xl font-semibold text-on-surface transition hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Aumentar cantidad">
                 +

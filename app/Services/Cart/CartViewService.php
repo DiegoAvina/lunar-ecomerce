@@ -5,6 +5,8 @@ namespace App\Services\Cart;
 use App\Data\Cart\CartData;
 use App\Data\Cart\CartItemData;
 use App\Support\LunarAttribute;
+use App\Support\Money;
+use App\Support\VariantQuantityRules;
 use Lunar\DataTypes\Price;
 use Lunar\Facades\CartSession;
 
@@ -121,6 +123,12 @@ class CartViewService
             ),
 
             image: $image ?: null,
+
+            minQuantity: VariantQuantityRules::minQuantity($variant),
+
+            quantityIncrement: VariantQuantityRules::quantityIncrement($variant),
+
+            maxQuantity: VariantQuantityRules::maxQuantity($variant),
         );
     }
 
@@ -153,27 +161,6 @@ class CartViewService
      */
     protected function money(?Price $price): string
     {
-        if (! $price) {
-            return '$0.00';
-        }
-
-        $currency = $price->currency;
-
-        $decimalPlaces =
-            $currency?->decimal_places ?? 2;
-
-        $value =
-            $price->value /
-            (10 ** $decimalPlaces);
-
-        $code =
-            $currency?->code ?? 'MXN';
-
-        return '$' . number_format(
-            $value,
-            $decimalPlaces,
-            '.',
-            ','
-        ) . ' ' . $code;
+        return Money::format($price);
     }
 }

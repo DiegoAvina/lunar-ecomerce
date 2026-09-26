@@ -12,7 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // El webhook de Mercado Pago lo llama su servidor, no un
+        // navegador con sesión/token CSRF de Laravel. La autenticidad
+        // de esa ruta se garantiza verificando su firma (x-signature),
+        // no con CSRF.
+        $middleware->validateCsrfTokens(except: [
+            'payments/mercadopago/webhook',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

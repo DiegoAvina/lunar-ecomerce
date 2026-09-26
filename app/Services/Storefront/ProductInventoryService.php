@@ -3,6 +3,7 @@
 namespace App\Services\Storefront;
 
 use App\Data\InventoryData;
+use App\Support\VariantQuantityRules;
 
 class ProductInventoryService
 {
@@ -14,9 +15,17 @@ class ProductInventoryService
 
             stock: $variant?->stock ?? 0,
 
-            available: ($variant?->stock ?? 0) > 0,
+            available: VariantQuantityRules::isAvailable($variant),
 
-            backorder: (bool) ($variant?->backorder ?? false),
+            backorder: VariantQuantityRules::allowsBackorder($variant),
+
+            purchasable: $variant?->purchasable ?? 'in_stock',
+
+            minQuantity: VariantQuantityRules::minQuantity($variant),
+
+            quantityIncrement: VariantQuantityRules::quantityIncrement($variant),
+
+            maxQuantity: VariantQuantityRules::maxQuantity($variant),
 
         );
     }

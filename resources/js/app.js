@@ -29,6 +29,93 @@ window.SwiperModules = {
 
 
 // ============================================================
+// REGLAS DE CANTIDAD (min_quantity / quantity_increment)
+// ============================================================
+//
+// Espejo en JS de App\Support\VariantQuantityRules — misma
+// regla que valida Lunar en el servidor (CartLineQuantity):
+// la cantidad debe ser múltiplo de "increment" y no menor a "min".
+// Esto es solo para que la UI no proponga cantidades inválidas;
+// la validación real sigue ocurriendo siempre en el backend.
+
+window.quantityRules = {
+
+    normalize(quantity, min, increment) {
+
+        min = Math.max(1, parseInt(min) || 1);
+
+        increment = Math.max(1, parseInt(increment) || 1);
+
+        quantity = Math.max(parseInt(quantity) || 0, min);
+
+        const remainder = quantity % increment;
+
+        return remainder === 0
+            ? quantity
+            : quantity + (increment - remainder);
+    },
+
+
+    floor(min, increment) {
+
+        return this.normalize(1, min, increment);
+    },
+
+
+    next(quantity, min, increment, max) {
+
+        const step = Math.max(1, parseInt(increment) || 1);
+
+        const value =
+            this.normalize(quantity, min, increment) + step;
+
+        return (max || max === 0)
+            ? Math.min(value, max)
+            : value;
+    },
+
+
+    prev(quantity, min, increment) {
+
+        const step = Math.max(1, parseInt(increment) || 1);
+
+        const floor = this.floor(min, increment);
+
+        const value =
+            this.normalize(quantity, min, increment) - step;
+
+        return Math.max(value, floor);
+    },
+
+
+    /**
+     * La cantidad válida más grande que no exceda "max".
+     * Si ni siquiera la cantidad mínima cabe en "max", regresa
+     * la cantidad mínima de todas formas (el llamador debe usar
+     * "available" para decidir si mostrar el selector).
+     */
+    clampToMax(min, increment, max) {
+
+        const step = Math.max(1, parseInt(increment) || 1);
+
+        const floor = this.floor(min, increment);
+
+        max = Math.max(0, parseInt(max) || 0);
+
+        if (max < floor) {
+            return floor;
+        }
+
+        return Math.max(
+            Math.floor(max / step) * step,
+            floor
+        );
+    },
+
+};
+
+
+// ============================================================
 // CART WIDGET
 // ============================================================
 
@@ -536,7 +623,7 @@ window.cartWidget = function () {
 // AGREGAR AL CARRITO (cards de producto)
 // ============================================================
 
-window.addToCartButton = function (url, variantId, quantity = 1) {
+window.addToCartButton = function (url, variantId, minQuantity = 1, quantityIncrement = 1) {
 
     return {
 
@@ -554,6 +641,12 @@ window.addToCartButton = function (url, variantId, quantity = 1) {
             }
 
             this.loading = true;
+
+
+            const quantity = window.quantityRules.floor(
+                minQuantity,
+                quantityIncrement
+            );
 
 
             try {

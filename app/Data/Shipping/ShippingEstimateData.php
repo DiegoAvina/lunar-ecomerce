@@ -1,48 +1,16 @@
 <?php
 
-namespace App\Services\Shipping;
+namespace App\Data\Shipping;
 
-use App\Data\Shipping\ShippingContextData;
-use App\Data\Shipping\ShippingEstimateData;
-
-class ShippingEstimateService
+final readonly class ShippingEstimateData
 {
-    public function estimate(
-        ShippingContextData $context
-    ): ShippingEstimateData {
-
-        $processing = now()->addDays(
-            config('shipping.processing_days')
-        );
-
-        $from = $processing
-            ->copy()
-            ->addDays(config('shipping.delivery.min_days'));
-
-        $to = $processing
-            ->copy()
-            ->addDays(config('shipping.delivery.max_days'));
-
-        $freeShipping = $context->cartTotal >= config('shipping.free_shipping_from');
-
-        return new ShippingEstimateData(
-
-            postalCode: $context->postalCode ?? 'Sin definir',
-
-            processingDate: $processing,
-
-            from: $from,
-
-            to: $to,
-
-            freeShipping: $freeShipping,
-
-            shippingCost: $freeShipping ? 0 : 149,
-
-            message: $freeShipping
-                ? 'Envío gratuito'
-                : 'Costo calculado al finalizar la compra'
-
-        );
-    }
+    public function __construct(
+        public string $postalCode,
+        public \Illuminate\Support\Carbon $processingDate,
+        public \Illuminate\Support\Carbon $from,
+        public \Illuminate\Support\Carbon $to,
+        public bool $freeShipping,
+        public int $shippingCost,
+        public string $message,
+    ) {}
 }

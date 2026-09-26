@@ -29,6 +29,10 @@
 
     $variantId = $product->variantId;
 
+    $minQuantity = $inventory->minQuantity;
+
+    $quantityIncrement = $inventory->quantityIncrement;
+
     $badges = $product->badges;
 @endphp
 
@@ -115,12 +119,20 @@
 
         <div class="mt-3">
 
-            @if($available)
+            @if($available && $stock > 0)
 
                 <span
                     class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
                     <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                     {{ $stock }} disponibles
+                </span>
+
+            @elseif($available)
+
+                <span
+                    class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                    Disponible bajo pedido
                 </span>
 
             @else
@@ -149,7 +161,7 @@
 
                 <button
                     type="button"
-                    x-data="addToCartButton('{{ $addToCartUrl }}', {{ $variantId ?? 'null' }})"
+                    x-data="addToCartButton('{{ $addToCartUrl }}', {{ $variantId ?? 'null' }}, {{ $minQuantity }}, {{ $quantityIncrement }})"
                     @click="add()"
                     :disabled="loading || !variantId"
                     aria-label="Agregar {{ $name }} al carrito"

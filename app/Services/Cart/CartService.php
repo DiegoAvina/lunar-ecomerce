@@ -41,14 +41,6 @@ class CartService
         $this->validateQuantity($quantity);
 
 
-        if (! $variant->purchasable) {
-
-            throw new InvalidArgumentException(
-                'Este producto no está disponible para compra.'
-            );
-        }
-
-
         return DB::transaction(function () use (
             $variant,
             $quantity,
@@ -60,37 +52,38 @@ class CartService
 
             /*
         |--------------------------------------------------------------------------
-        | Validar stock real en servidor
+        | Validar disponibilidad real en servidor
         |--------------------------------------------------------------------------
+        |
+        | ProductVariant::canBeFulfilledAtQuantity() ya contempla las
+        | tres reglas de "purchasable" de Lunar ('always',
+        | 'in_stock', 'in_stock_or_on_backorder'), por lo que no
+        | necesitamos reimplementarlas aquí.
         */
 
-            if (! $variant->backorder) {
-
-                $existingQuantity = (int) $cart->lines()
-                    ->where('purchasable_type', 'product_variant')
-                    ->where('purchasable_id', $variant->id)
-                    ->sum('quantity');
+            $existingQuantity = (int) $cart->lines()
+                ->where('purchasable_type', 'product_variant')
+                ->where('purchasable_id', $variant->id)
+                ->sum('quantity');
 
 
-                $requestedQuantity =
-                    $existingQuantity + $quantity;
+            $requestedQuantity =
+                $existingQuantity + $quantity;
 
+
+            if (! $variant->canBeFulfilledAtQuantity($requestedQuantity)) {
 
                 $stock = (int) $variant->stock;
 
+                throw new InvalidArgumentException(
 
-                if ($requestedQuantity > $stock) {
+                    $stock > 0
 
-                    throw new InvalidArgumentException(
+                        ? "Solo hay {$stock} piezas disponibles."
 
-                        $stock > 0
+                        : "Este producto está agotado."
 
-                            ? "Solo hay {$stock} piezas disponibles."
-
-                            : "Este producto está agotado."
-
-                    );
-                }
+                );
             }
 
 
@@ -195,18 +188,7 @@ class CartService
 
         /*
         |--------------------------------------------------------------------------
-        | Verificar que todavía pueda comprarse
-        |--------------------------------------------------------------------------
-        */
-
-        $this->validatePurchasable(
-            $variant
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Verificar stock
+        | Verificar disponibilidad real (incluye "purchasable" y stock)
         |--------------------------------------------------------------------------
         */
 
@@ -331,32 +313,18 @@ class CartService
     }
 
     /**
-     * Valida que la variante pueda comprarse.
-     */
-    protected function validatePurchasable(
-        ProductVariant $variant
-    ): void {
-
-        if (! $variant->purchasable) {
-
-            throw new InvalidArgumentException(
-                'Este producto no está disponible para compra.'
-            );
-        }
-    }
-
-    /**
      * Valida el inventario disponible.
      *
-     * Si backorder está habilitado, permitimos comprar
-     * aunque no haya inventario disponible.
+     * Usa ProductVariant::canBeFulfilledAtQuantity(), que ya
+     * contempla las tres reglas de "purchasable" de Lunar
+     * ('always', 'in_stock', 'in_stock_or_on_backorder').
      */
     protected function validateStock(
         ProductVariant $variant,
         int $quantity
     ): void {
 
-        if ($variant->backorder) {
+        if ($variant->canBeFulfilledAtQuantity($quantity)) {
             return;
         }
 
@@ -364,19 +332,14 @@ class CartService
         $stock = (int) $variant->stock;
 
 
-        if ($stock <= 0) {
+        throw new InvalidArgumentException(
 
-            throw new InvalidArgumentException(
-                'Este producto está agotado.'
-            );
-        }
+            $stock > 0
 
+                ? "Solo hay {$stock} piezas disponibles."
 
-        if ($quantity > $stock) {
+                : "Este producto está agotado."
 
-            throw new InvalidArgumentException(
-                "Solo hay {$stock} piezas disponibles."
-            );
-        }
+        );
     }
 }

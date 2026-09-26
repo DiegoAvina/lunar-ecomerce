@@ -28,7 +28,7 @@
 
         <div class="flex items-center gap-4">
 
-            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-surface-container-low text-primary">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-primary">
                 <span class="material-symbols-outlined" aria-hidden="true">{{ $feature['icon'] }}</span>
             </span>
 
@@ -94,7 +94,7 @@
             </p>
 
             <a href="#"
-                class="group inline-flex items-center gap-3 border border-primary text-primary px-12 py-5
+                class="group inline-flex items-center gap-3 rounded-full border border-primary text-primary px-10 py-4
                           font-label-md text-label-md uppercase
                           transition-all duration-300 hover:bg-primary hover:text-white hover:shadow-xl hover:shadow-primary/20">
                 Descubre el Centro de Innovación

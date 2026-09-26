@@ -9,7 +9,11 @@ use App\Http\Controllers\SearchSuggestionController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Payment\PaymentController;
+use App\Http\Controllers\Payment\MercadoPagoController;
+use App\Http\Controllers\Payment\PaymentWebhookController;
 
 
 
@@ -154,6 +158,55 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])
         ->name('checkout.address.store');
 
+    Route::post('/checkout/address/{address}/shipping', [CheckoutController::class, 'useShippingAddress'])
+        ->name('checkout.address.shipping');
+
+    Route::post('/checkout/address/{address}/billing', [CheckoutController::class, 'useBillingAddress'])
+        ->name('checkout.address.billing');
+
+    Route::post('/checkout/place', [CheckoutController::class, 'place'])
+        ->name('checkout.place');
+
+    Route::get('/checkout/confirmacion/{order}', [OrderController::class, 'show'])
+        ->name('checkout.confirmation');
+
+    Route::get('/mis-pedidos', [OrderController::class, 'index'])
+        ->name('orders.index');
+
 });
+
+
+/*
+|--------------------------------------------------------------------------
+| PAGOS — MERCADO PAGO (Checkout Pro)
+|--------------------------------------------------------------------------
+|
+| Iniciar el pago y las return URLs requieren sesión (son la Order del
+| propio usuario). El webhook NO lleva sesión ni CSRF — lo llama el
+| servidor de Mercado Pago, y su autenticidad se valida con x-signature
+| (ver PaymentWebhookController y bootstrap/app.php).
+|
+*/
+
+Route::middleware('auth')->group(function () {
+
+    Route::post('/pagos/mercadopago/{orderId}', [PaymentController::class, 'payWithMercadoPago'])
+        ->name('payments.mercadopago.pay');
+
+    Route::get('/pagos/mercadopago/success', [MercadoPagoController::class, 'success'])
+        ->name('payments.mercadopago.success');
+
+    Route::get('/pagos/mercadopago/failure', [MercadoPagoController::class, 'failure'])
+        ->name('payments.mercadopago.failure');
+
+    Route::get('/pagos/mercadopago/pending', [MercadoPagoController::class, 'pending'])
+        ->name('payments.mercadopago.pending');
+
+});
+
+
+Route::post('/payments/mercadopago/webhook', [PaymentWebhookController::class, 'handle'])
+    ->name('payments.mercadopago.webhook');
+
 
 require __DIR__.'/auth.php';

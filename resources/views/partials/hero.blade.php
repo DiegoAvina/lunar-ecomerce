@@ -55,13 +55,13 @@
                             <p class="font-body-lg text-body-lg text-secondary max-w-lg mb-12">
                                 {{ $slide['description'] }}
                             </p>
-                            <div class="flex flex-wrap gap-4">
+                            <div class="flex flex-wrap gap-3">
                                 <a href="{{ $slide['primaryBtn']['url'] }}"
-                                   class="bg-primary text-on-primary px-10 py-5 font-label-md text-label-md active:opacity-90 transition-all">
+                                   class="rounded-full bg-primary text-on-primary px-8 py-4 font-label-md text-label-md transition-all duration-300 hover:brightness-110 active:opacity-90">
                                     {{ $slide['primaryBtn']['label'] }}
                                 </a>
                                 <a href="{{ $slide['secondaryBtn']['url'] }}"
-                                   class="border border-outline-variant text-primary px-10 py-5 font-label-md text-label-md hover:bg-surface-container-low transition-all">
+                                   class="rounded-full border border-outline-variant text-on-surface px-8 py-4 font-label-md text-label-md transition-all duration-300 hover:border-primary hover:text-primary">
                                     {{ $slide['secondaryBtn']['label'] }}
                                 </a>
                             </div>

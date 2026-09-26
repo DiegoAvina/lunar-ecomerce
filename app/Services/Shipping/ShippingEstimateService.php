@@ -2,35 +2,32 @@
 
 namespace App\Services\Shipping;
 
+use App\Data\Shipping\ShippingContextData;
 use App\Data\Shipping\ShippingEstimateData;
-use Carbon\Carbon;
 
 class ShippingEstimateService
 {
     public function estimate(
-        ?string $postalCode = null,
-        float $cartTotal = 0
+        ShippingContextData $context
     ): ShippingEstimateData {
 
         $processing = now()->addDays(
             config('shipping.processing_days')
         );
 
-        $from = $processing->copy()->addDays(
-            config('shipping.delivery.min_days')
-        );
+        $from = $processing
+            ->copy()
+            ->addDays(config('shipping.delivery.min_days'));
 
-        $to = $processing->copy()->addDays(
-            config('shipping.delivery.max_days')
-        );
+        $to = $processing
+            ->copy()
+            ->addDays(config('shipping.delivery.max_days'));
 
-        $freeShipping = $cartTotal >= config('shipping.free_shipping_from');
-
-        $shippingCost = $freeShipping ? 0 : 149;
+        $freeShipping = $context->cartTotal >= config('shipping.free_shipping_from');
 
         return new ShippingEstimateData(
 
-            postalCode: $postalCode ?? 'Sin definir',
+            postalCode: $context->postalCode ?? 'Sin definir',
 
             processingDate: $processing,
 
@@ -40,11 +37,11 @@ class ShippingEstimateService
 
             freeShipping: $freeShipping,
 
-            shippingCost: $shippingCost,
+            shippingCost: $freeShipping ? 0 : 149,
 
             message: $freeShipping
                 ? 'Envío gratuito'
-                : 'Costo de envío calculado al finalizar la compra',
+                : 'Costo calculado al finalizar la compra'
 
         );
     }

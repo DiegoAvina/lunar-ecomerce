@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Lunar\Exceptions\Carts\CartException;
 use Lunar\Models\CartLine;
 use Lunar\Models\ProductVariant;
 use InvalidArgumentException;
@@ -47,9 +48,6 @@ class CartController extends Controller
     /**
      * Agregar una variante al carrito.
      */
-    /**
-     * Agregar una variante al carrito.
-     */
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -73,14 +71,12 @@ class CartController extends Controller
 
         ]);
 
-
-        try {
+        return $this->handleCartAction(function () use ($validated) {
 
             $variant = ProductVariant::query()
                 ->findOrFail(
                     $validated['variant_id']
                 );
-
 
             $this->cartService->addProduct(
 
@@ -92,28 +88,8 @@ class CartController extends Controller
 
             );
 
-
-            return response()->json([
-
-                'success' => true,
-
-                'message' =>
-                'Producto agregado al carrito.',
-
-                'cart' =>
-                $this->cartViewService->get(),
-
-            ]);
-        } catch (InvalidArgumentException $e) {
-
-            return response()->json([
-
-                'success' => false,
-
-                'message' => $e->getMessage(),
-
-            ], 422);
-        }
+            return 'Producto agregado al carrito.';
+        });
     }
 
     /**
@@ -131,18 +107,17 @@ class CartController extends Controller
             ],
         ]);
 
-        $this->ensureLineBelongsToCurrentCart($line);
+        return $this->handleCartAction(function () use ($validated, $line) {
 
-        $this->cartService->updateQuantity(
-            lineId: $line->id,
-            quantity: $validated['quantity'],
-        );
+            $this->ensureLineBelongsToCurrentCart($line);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Cantidad actualizada.',
-            'cart' => $this->cartViewService->get(),
-        ]);
+            $this->cartService->updateQuantity(
+                lineId: $line->id,
+                quantity: $validated['quantity'],
+            );
+
+            return 'Cantidad actualizada.';
+        });
     }
 
     /**
@@ -151,15 +126,14 @@ class CartController extends Controller
     public function destroy(
         CartLine $line
     ): JsonResponse {
-        $this->ensureLineBelongsToCurrentCart($line);
+        return $this->handleCartAction(function () use ($line) {
 
-        $this->cartService->remove($line->id);
+            $this->ensureLineBelongsToCurrentCart($line);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Producto eliminado del carrito.',
-            'cart' => $this->cartViewService->get(),
-        ]);
+            $this->cartService->remove($line->id);
+
+            return 'Producto eliminado del carrito.';
+        });
     }
 
     /**
@@ -167,13 +141,54 @@ class CartController extends Controller
      */
     public function clear(): JsonResponse
     {
-        $this->cartService->clear();
+        return $this->handleCartAction(function () {
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Carrito vaciado.',
-            'cart' => $this->cartViewService->get(),
-        ]);
+            $this->cartService->clear();
+
+            return 'Carrito vaciado.';
+        });
+    }
+
+    /**
+     * Ejecuta una acción del carrito y homogeneiza la respuesta.
+     *
+     * Cualquier validación esperable del carrito (stock, cantidad
+     * mínima, incrementos de cantidad, etc.) debe traducirse siempre
+     * en un JSON 422 con un mensaje en español — nunca en un error
+     * 500. Esto cubre tanto nuestras propias validaciones
+     * (InvalidArgumentException, lanzadas desde CartService) como
+     * las validaciones nativas de Lunar (CartException, lanzada
+     * internamente por Cart::add()/updateLine() a través de los
+     * validadores configurados en config/lunar/cart.php).
+     *
+     * Cualquier otra excepción no se captura aquí: significa un
+     * error real e inesperado, y debe seguir propagándose como 500.
+     */
+    protected function handleCartAction(callable $action): JsonResponse
+    {
+        try {
+
+            $message = $action();
+
+            return response()->json([
+
+                'success' => true,
+
+                'message' => $message,
+
+                'cart' => $this->cartViewService->get(),
+
+            ]);
+        } catch (InvalidArgumentException|CartException $e) {
+
+            return response()->json([
+
+                'success' => false,
+
+                'message' => $e->getMessage(),
+
+            ], 422);
+        }
     }
 
     /**

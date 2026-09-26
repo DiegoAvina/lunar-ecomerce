@@ -245,14 +245,19 @@
                                             <button
                                                 type="button"
                                                 @click="
-                                                    if (item.quantity > 1) {
-                                                        updateItem(
-                                                            item.lineId,
-                                                            item.quantity - 1
+                                                    updateItem(
+                                                        item.lineId,
+                                                        quantityRules.prev(
+                                                            item.quantity,
+                                                            item.minQuantity,
+                                                            item.quantityIncrement
                                                         )
-                                                    }
+                                                    )
                                                 "
-                                                :disabled="loading || item.quantity <= 1"
+                                                :disabled="
+                                                    loading ||
+                                                    item.quantity <= quantityRules.floor(item.minQuantity, item.quantityIncrement)
+                                                "
                                                 class="flex h-10 w-10 items-center justify-center text-lg font-semibold text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">
 
                                                 −
@@ -271,10 +276,15 @@
                                                 @click="
                                                     updateItem(
                                                         item.lineId,
-                                                        item.quantity + 1
+                                                        quantityRules.next(
+                                                            item.quantity,
+                                                            item.minQuantity,
+                                                            item.quantityIncrement,
+                                                            item.maxQuantity
+                                                        )
                                                     )
                                                 "
-                                                :disabled="loading"
+                                                :disabled="loading || item.quantity >= item.maxQuantity"
                                                 class="flex h-10 w-10 items-center justify-center text-lg font-semibold text-gray-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40">
 
                                                 +
