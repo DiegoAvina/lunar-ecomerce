@@ -3,9 +3,11 @@
 namespace App\Services\Payment;
 
 use App\Data\Payment\PaymentResultData;
+use App\Exceptions\Payment\TooManyWebhookAttemptsException;
 use App\Models\PaymentWebhookEvent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use InvalidArgumentException;
 use Lunar\Models\Order;
 use Lunar\Models\Transaction;
@@ -29,6 +31,31 @@ class PaymentWebhookService
      * de la Order de forma inequívoca (ver MercadoPagoService).
      */
     protected const REFERENCE_PREFIX = 'order-';
+
+    /**
+     * Cuántas veces, como máximo, se vuelve a consultar el MISMO pago
+     * (mismo data_id) en la API de Mercado Pago dentro de la ventana
+     * en que su firma sigue siendo válida (ver
+     * MercadoPagoService::SIGNATURE_TOLERANCE_SECONDS).
+     *
+     * Esto es lo que cierra el hallazgo real: solo se llega aquí
+     * DESPUÉS de que la firma ya fue verificada (paso 1 de handle()),
+     * así que un atacante sin el secreto real nunca lo alcanza — esto
+     * no reemplaza la validación de firma, la complementa. Lo que sí
+     * detiene es el escenario en que alguien capturó UNA notificación
+     * real (con firma válida) y la reenvía muchas veces dentro de los
+     * 300s en que esa firma sigue siendo válida: sin este límite, cada
+     * reenvío dispara una llamada real a findPayment() contra la API
+     * de Mercado Pago, aunque el resultado final siempre sea
+     * descartado por la idempotencia de los pasos 4 y 10-11.
+     *
+     * 10 intentos en esa misma ventana de 300s es deliberadamente
+     * generoso: dan margen de sobra para que Mercado Pago reintente
+     * legítimamente la misma notificación si nuestro servidor no
+     * respondió a tiempo, mientras acotan un reenvío malicioso a un
+     * puñado de llamadas en vez de dejarlo ilimitado.
+     */
+    protected const MAX_LOOKUPS_PER_EVENT = 10;
 
     public function __construct(
         protected MercadoPagoService $mercadoPago,
@@ -69,6 +96,22 @@ class PaymentWebhookService
         if ($type !== 'payment' || ! $dataId) {
             return ['status' => 'ignored', 'message' => "Tipo de notificación no manejado: {$type}"];
         }
+
+        // 2.5. Límite por evento (rate limiting real de este flujo,
+        // ver MAX_LOOKUPS_PER_EVENT arriba). Se evalúa DESPUÉS de la
+        // firma para no poder ser explotado por alguien sin el
+        // secreto real, y ANTES de findPayment() para evitar la
+        // llamada innecesaria a la API de Mercado Pago cuando se
+        // dispara.
+        $eventKey = 'mercadopago-webhook-event:'.$dataId;
+
+        if (RateLimiter::tooManyAttempts($eventKey, self::MAX_LOOKUPS_PER_EVENT)) {
+            throw new TooManyWebhookAttemptsException(
+                "Demasiadas consultas para el pago {$dataId} en poco tiempo."
+            );
+        }
+
+        RateLimiter::hit($eventKey, MercadoPagoService::SIGNATURE_TOLERANCE_SECONDS);
 
         // 3. Fuente de verdad: consultamos el pago real en Mercado
         // Pago. Nunca confiamos en el monto/estado que pudiera venir

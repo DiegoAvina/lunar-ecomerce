@@ -96,7 +96,8 @@
                                 <input
                                     type="checkbox"
                                     @checked($option->selected)
-                                    onclick="return false;"
+                                    class="pointer-events-none"
+                                    tabindex="-1"
                                 >
 
                                 <span>

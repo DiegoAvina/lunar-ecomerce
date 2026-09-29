@@ -736,6 +736,24 @@ window.addToCartButton = function (url, variantId, minQuantity = 1, quantityIncr
 
 
 // ============================================================
+// ACCIONES DELEGADAS (reemplazan onclick/onchange inline, que la
+// CSP bloquea con script-src sin 'unsafe-inline')
+// ============================================================
+
+document.addEventListener('change', (event) => {
+    if (event.target.matches('[data-autosubmit]')) {
+        event.target.form?.submit();
+    }
+});
+
+document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-action="reload-page"]')) {
+        window.location.reload();
+    }
+});
+
+
+// ============================================================
 // ALPINE
 // ============================================================
 

@@ -104,7 +104,8 @@ Route::delete(
 Route::get(
     '/api/search/suggestions',
     SearchSuggestionController::class
-)->name('search.suggestions');
+)->middleware('throttle:search-suggestions')
+    ->name('search.suggestions');
 
 
 /*
@@ -165,6 +166,7 @@ Route::middleware('auth')->group(function () {
         ->name('checkout.address.billing');
 
     Route::post('/checkout/place', [CheckoutController::class, 'place'])
+        ->middleware('throttle:checkout-place')
         ->name('checkout.place');
 
     Route::get('/checkout/confirmacion/{order}', [OrderController::class, 'show'])
@@ -206,6 +208,7 @@ Route::middleware('auth')->group(function () {
 
 
 Route::post('/payments/mercadopago/webhook', [PaymentWebhookController::class, 'handle'])
+    ->middleware('throttle:mercadopago-webhook')
     ->name('payments.mercadopago.webhook');
 
 

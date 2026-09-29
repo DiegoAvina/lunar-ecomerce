@@ -70,7 +70,7 @@
 
                     <button
                         type="button"
-                        onclick="window.location.reload()"
+                        data-action="reload-page"
                         class="rounded-xl border border-outline-variant px-6 py-3 text-sm font-semibold text-on-surface hover:border-primary hover:text-primary">
                         Actualizar estado
                     </button>

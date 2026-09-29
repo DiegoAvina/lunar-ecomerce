@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Payment;
 
+use App\Exceptions\Payment\TooManyWebhookAttemptsException;
 use App\Http\Controllers\Controller;
 use App\Services\Payment\PaymentWebhookService;
 use Illuminate\Http\JsonResponse;
@@ -56,6 +57,22 @@ class PaymentWebhookController extends Controller
             // misma forma que ante un 5xx, y no queremos darle a un
             // atacante ninguna pista sobre por qué falló.
             return response()->json(['error' => 'invalid signature'], 401);
+
+        } catch (TooManyWebhookAttemptsException $e) {
+
+            // Firma válida, pero este mismo pago (data_id) ya se
+            // consultó demasiadas veces en la ventana en que esa
+            // firma sigue siendo válida. No es un dato corrupto ni
+            // una firma inválida: es replay/abuso. 429 para que
+            // quede claro que es un límite de tasa, no un rechazo
+            // definitivo — Mercado Pago puede reintentar más tarde
+            // sin problema, la idempotencia sigue intacta.
+            Log::warning('mercadopago.webhook.rate_limited', [
+                'data_id' => $dataId,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json(['error' => 'too many requests'], 429);
 
         } catch (InvalidArgumentException $e) {
 

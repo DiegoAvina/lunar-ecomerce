@@ -23,8 +23,15 @@ class MercadoPagoService
     /**
      * Tolerancia de reloj para la validación de timestamp del webhook
      * (protección contra replay attacks con notificaciones viejas).
+     *
+     * Público porque PaymentWebhookService reutiliza este mismo valor
+     * como ventana de su límite de consultas por evento (ver
+     * MAX_LOOKUPS_PER_EVENT ahí): no tiene sentido que ese límite dure
+     * más que el tiempo en que una firma capturada sigue siendo
+     * válida — pasada esta ventana, un replay ya es rechazado por la
+     * propia validación de firma, sin necesidad de rate limiting.
      */
-    protected const SIGNATURE_TOLERANCE_SECONDS = 300;
+    public const SIGNATURE_TOLERANCE_SECONDS = 300;
 
     public function __construct()
     {

@@ -88,7 +88,7 @@
             @foreach ($slides as $index => $slide)
                 <button
                     aria-label="Slide {{ $index + 1 }}"
-                    onclick="setSlide({{ $index }})"
+                    data-slide-index="{{ $index }}"
                     class="carousel-dot w-2 h-2 rounded-full transition-all duration-300
                            {{ $index === 0 ? 'bg-primary' : 'bg-outline-variant hover:bg-outline' }}"
                 ></button>
@@ -99,7 +99,7 @@
 </section>
 
 @push('scripts')
-<script>
+<script nonce="{{ $cspNonce }}">
     let currentSlide = 0;
     const slides = document.querySelectorAll('.carousel-item');
     const dots   = document.querySelectorAll('.carousel-dot');
@@ -118,5 +118,9 @@
 
     // Auto-rotación cada 6 segundos
     setInterval(() => setSlide((currentSlide + 1) % slides.length), 6000);
+
+    dots.forEach((dot) => {
+        dot.addEventListener('click', () => setSlide(Number(dot.dataset.slideIndex)));
+    });
 </script>
 @endpush
